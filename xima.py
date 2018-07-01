@@ -10,11 +10,17 @@ class XimaScraper:
         }
         sort_order = '-1'
         album_size = '1000'
-        base_url = 'http://www.ximalaya.com/revision/play/'
-        url = base_url+'album?albumId={}&pageNum=1&sort={}&pageSize={}'.format(album_no, sort_order, album_size)
-        req = requests.get(url, headers=headers)
-        self.full_tracks_info = req.json()['data']['tracksAudioPlay']
-        self.album_name = self.full_tracks_info[0]['albumName']
+        self.full_tracks_info = []
+        self.hasMore = True
+        page_num = 1
+        while(self.hasMore):
+            base_url = 'http://www.ximalaya.com/revision/play/'
+            url = base_url+'album?albumId={}&pageNum={}&sort={}&pageSize={}'.format(album_no,str(page_num), sort_order, album_size)
+            req = requests.get(url, headers=headers)
+            self.full_tracks_info.extend( req.json()['data']['tracksAudioPlay'])
+            self.album_name = self.full_tracks_info[0]['albumName']
+            self.hasMore =  req.json()['data']['hasMore']
+            page_num += 1
 
     def get_index_trackname_url(self):
         # filename = padded index - trackName, e.g. 001 - trackName
@@ -25,8 +31,8 @@ class XimaScraper:
 # helper functions
 # ----------------
 def pad_zero(n):
-    padded = '000'+n
-    return padded[-3:]
+    padded = '0000'+n
+    return padded[-4:]
 
 
 def download_from_url(filedir, idx, trackname, url):
